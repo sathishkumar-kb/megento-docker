@@ -3,23 +3,27 @@ services:
   php:
     build: ./docker/php
     volumes:
-        - ./:/usr/share/nginx/www
-    working_dir: /usr/share/nginx/www
+        - ./krazybee:/var/www/krazybee
+    working_dir: /var/www
+    networks:
+      - kafka
 
   nginx:
     build: ./docker/nginx
     links:
         - php
-    volumes_from:
-        - php
+    volumes:
+        - ./krazybee:/var/www/krazybee
     ports:
-      - 80:80
-
+      - 8080:80
+    networks:
+      - kafka
   zookeeper:
     image: wurstmeister/zookeeper
     ports:
       - 2181:2181
-
+    networks:
+      - kafka
   kafka:
     image: wurstmeister/kafka
     ports:
@@ -30,3 +34,26 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - kafka
+  mysql: 
+    image: mysql:5.6
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: mysql123
+      MYSQL_DATABASE: krazybee
+      MYSQL_ROOT_USERNAME: root
+    volumes:
+      - ./db-dump/kb.sql:/etc/mysql/dump.sql
+      - data:/var/lib/mysql
+    networks:
+      - kafka
+    links:
+      - php
+
+volumes:
+  data:
+
+networks:
+  kafka:

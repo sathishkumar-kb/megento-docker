@@ -1,5 +1,10 @@
-FROM nginx:1.13.7
+FROM nginx:latest
 
 COPY rootfs /
+
+VOLUME /var/www
+
+RUN chown -R www-data:www-data /var/www
+RUN chmod 755 /var/www
 
 EXPOSE 80
